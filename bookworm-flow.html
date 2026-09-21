@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BookWorm E-Store — Application Flow</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    background: #ffffff;
+    color: #1f2328;
+  }
+  .page { max-width: 1000px; margin: 0 auto; padding: 32px 24px 48px; }
+
+  /* ── Header ── */
+  .header { text-align: center; margin-bottom: 40px; }
+  .header h1 { font-size: 26px; font-weight: 700; color: #1f2328; }
+  .header p  { font-size: 13px; color: #57606a; margin-top: 6px; }
+  .badge-row { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .badge-java   { background: #fff3e0; color: #e65100; border: 1px solid #ffcc80; }
+  .badge-spring { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+  .badge-react  { background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
+  .badge-tail   { background: #e0f2f1; color: #00695c; border: 1px solid #80cbc4; }
+
+  /* ── Section titles ── */
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #57606a;
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  /* ── ARCH OVERVIEW ── */
+  .arch {
+    display: grid;
+    grid-template-columns: 1fr 80px 1fr;
+    gap: 0;
+    margin-bottom: 36px;
+    align-items: stretch;
+  }
+  .arch-box {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 18px;
+    background: #f7f8fa;
+  }
+  .arch-box h3 { font-size: 13px; font-weight: 700; margin-bottom: 10px; }
+  .arch-box.frontend h3 { color: #1565c0; }
+  .arch-box.backend  h3 { color: #2e7d32; }
+  .arch-arrow {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 4px; font-size: 11px; color: #57606a; text-align: center;
+  }
+  .arch-arrow .arw { font-size: 22px; color: #3b82d4; }
+  .layer { margin-bottom: 8px; }
+  .layer-label { font-size: 10px; font-weight: 600; color: #57606a; text-transform: uppercase; margin-bottom: 3px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .chip {
+    font-size: 10px; padding: 2px 8px; border-radius: 4px;
+    background: #e5e7eb; color: #1f2328; border: 1px solid #d1d5db;
+  }
+  .chip-blue   { background: #dbeafe; color: #1e40af; border-color: #bfdbfe; }
+  .chip-green  { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+  .chip-amber  { background: #fef9c3; color: #854d0e; border-color: #fde68a; }
+  .chip-purple { background: #ede9fe; color: #5b21b6; border-color: #ddd6fe; }
+  .chip-rose   { background: #ffe4e6; color: #9f1239; border-color: #fecdd3; }
+
+  /* ── FLOW STEPS ── */
+  .flows { display: flex; flex-direction: column; gap: 10px; margin-bottom: 36px; }
+  .flow-row {
+    display: grid;
+    grid-template-columns: 160px 1fr 1fr;
+    gap: 0;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .flow-label {
+    padding: 12px 14px;
+    background: #f7f8fa;
+    border-right: 1px solid #e5e7eb;
+    display: flex; align-items: center;
+  }
+  .flow-label-inner { font-size: 12px; font-weight: 700; color: #1f2328; }
+  .flow-label-sub   { font-size: 10px; color: #57606a; margin-top: 1px; }
+  .flow-fe {
+    padding: 12px 14px;
+    border-right: 1px solid #e5e7eb;
+    background: #f0f7ff;
+  }
+  .flow-be {
+    padding: 12px 14px;
+    background: #f0fdf4;
+  }
+  .flow-side-label {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+  .flow-fe .flow-side-label { color: #1565c0; }
+  .flow-be .flow-side-label { color: #2e7d32; }
+  .flow-item { font-size: 11px; color: #1f2328; margin-bottom: 2px; padding-left: 10px; position: relative; }
+  .flow-item::before { content: "→"; position: absolute; left: 0; color: #9ca3af; font-size: 10px; }
+  .flow-item code {
+    font-family: "SFMono-Regular", Consolas, monospace;
+    font-size: 10px;
+    background: #e5e7eb;
+    padding: 1px 4px;
+    border-radius: 3px;
+    color: #374151;
+  }
+  .flow-item code.post { background: #dcfce7; color: #166534; }
+  .flow-item code.get  { background: #dbeafe; color: #1e40af; }
+  .flow-item code.del  { background: #ffe4e6; color: #9f1239; }
+  .flow-item code.put  { background: #fef9c3; color: #854d0e; }
+
+  /* ── ENTITY MAP ── */
+  .entity-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 36px; }
+  .entity-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 10px 12px;
+    background: #f7f8fa;
+  }
+  .entity-card h4 { font-size: 11px; font-weight: 700; color: #1f2328; margin-bottom: 5px; }
+  .entity-field { font-size: 10px; color: #57606a; }
+
+  /* ── API TABLE ── */
+  .api-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 36px; }
+  .api-table th {
+    text-align: left; padding: 7px 10px;
+    background: #f7f8fa; border-bottom: 2px solid #e5e7eb;
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #57606a;
+  }
+  .api-table td { padding: 6px 10px; border-bottom: 1px solid #f3f4f6; vertical-align: top; }
+  .api-table tr:hover td { background: #fafafa; }
+  .method {
+    display: inline-block; padding: 1px 6px; border-radius: 3px;
+    font-size: 10px; font-weight: 700; font-family: "SFMono-Regular", Consolas, monospace;
+  }
+  .m-get    { background: #dbeafe; color: #1e40af; }
+  .m-post   { background: #dcfce7; color: #166534; }
+  .m-put    { background: #fef9c3; color: #854d0e; }
+  .m-delete { background: #ffe4e6; color: #9f1239; }
+  .endpoint { font-family: "SFMono-Regular", Consolas, monospace; font-size: 10px; color: #374151; }
+  .group-row td { background: #f7f8fa; font-size: 10px; font-weight: 700; color: #57606a; padding: 4px 10px; border-bottom: 1px solid #e5e7eb; }
+
+  /* ── STATE LIFECYCLE ── */
+  .lifecycle { display: flex; align-items: center; flex-wrap: wrap; gap: 0; margin-bottom: 36px; }
+  .lc-step {
+    display: flex; align-items: center; gap: 6px;
+  }
+  .lc-box {
+    padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 600;
+    border: 1px solid #e5e7eb; white-space: nowrap;
+  }
+  .lc-arrow { font-size: 16px; color: #9ca3af; margin: 0 2px; }
+  .lc-placed    { background: #dbeafe; color: #1e40af; border-color: #bfdbfe; }
+  .lc-payment   { background: #fef9c3; color: #854d0e; border-color: #fde68a; }
+  .lc-confirmed { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+  .lc-shipped   { background: #ede9fe; color: #5b21b6; border-color: #ddd6fe; }
+  .lc-delivered { background: #f0fdf4; color: #14532d; border-color: #86efac; }
+  .lc-cancelled { background: #ffe4e6; color: #9f1239; border-color: #fecdd3; }
+  .lc-note { font-size: 10px; color: #57606a; margin-left: 8px; margin-top: 4px; }
+
+  /* ── KEY FEATURES ── */
+  .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 36px; }
+  .feature-card {
+    border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 14px;
+  }
+  .feature-card h4 { font-size: 12px; font-weight: 700; color: #1f2328; margin-bottom: 6px; }
+  .feature-item { font-size: 11px; color: #57606a; padding-left: 12px; position: relative; margin-bottom: 2px; }
+  .feature-item::before { content: "•"; position: absolute; left: 0; color: #3b82d4; }
+
+  /* ── Footer ── */
+  .footer {
+    text-align: center; font-size: 11px; color: #9ca3af;
+    margin-top: 40px; padding-top: 16px; border-top: 1px solid #e5e7eb;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── Header ── -->
+  <div class="header">
+    <h1>📚 BookWorm E-Store — Full Application Flow</h1>
+    <p>End-to-end walkthrough from browser to database across React frontend and Spring Boot backend</p>
+    <div class="badge-row">
+      <span class="badge badge-react">React 18 + Vite</span>
+      <span class="badge badge-tail">Tailwind CSS</span>
+      <span class="badge badge-java">Java 17</span>
+      <span class="badge badge-spring">Spring Boot 3</span>
+      <span class="badge badge-spring">Spring Data JPA</span>
+    </div>
+  </div>
+
+  <!-- ── 1. Architecture Overview ── -->
+  <div class="section-title">1 · Architecture Overview</div>
+  <div class="arch">
+    <!-- Frontend box -->
+    <div class="arch-box frontend">
+      <h3>🖥 Frontend (bookworm-frontend)</h3>
+
+      <div class="layer">
+        <div class="layer-label">Entry &amp; Routing</div>
+        <div class="chips">
+          <span class="chip chip-blue">App.jsx</span>
+          <span class="chip chip-blue">StoreContext (global state)</span>
+          <span class="chip chip-blue">localStorage (cart UUID + user)</span>
+        </div>
+      </div>
+
+      <div class="layer">
+        <div class="layer-label">Views</div>
+        <div class="chips">
+          <span class="chip">HomeView</span>
+          <span class="chip">BookDetailView</span>
+          <span class="chip">CartCheckoutView</span>
+          <span class="chip">OrdersView</span>
+          <span class="chip">WishlistView</span>
+          <span class="chip">WritersView</span>
+        </div>
+      </div>
+
+      <div class="layer">
+        <div class="layer-label">Components</div>
+        <div class="chips">
+          <span class="chip">Navbar</span>
+          <span class="chip">BookCard</span>
+          <span class="chip">LoginModal</span>
+        </div>
+      </div>
+
+      <div class="layer">
+        <div class="layer-label">API Service Layer</div>
+        <div class="chips">
+          <span class="chip chip-blue">api.js — fetch wrapper</span>
+          <span class="chip">Base: /api/v1</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Arrow -->
+    <div class="arch-arrow">
+      <div class="arw">⇄</div>
+      <div>HTTP/JSON</div>
+      <div>REST API</div>
+      <div style="margin-top:8px; font-size:10px;">Vite proxy<br/>→ :8080</div>
+    </div>
+
+    <!-- Backend box -->
+    <div class="arch-box backend">
+      <h3>⚙ Backend (bookworm-backend)</h3>
+
+      <div class="layer">
+        <div class="layer-label">Controllers (REST API)</div>
+        <div class="chips">
+          <span class="chip chip-green">AuthController</span>
+          <span class="chip chip-green">CatalogController</span>
+          <span class="chip chip-green">CartController</span>
+          <span class="chip chip-green">OrderController</span>
+          <span class="chip chip-green">PaymentController</span>
+          <span class="chip chip-green">WishlistController</span>
+          <span class="chip chip-green">ReviewController</span>
+          <span class="chip chip-green">CouponController</span>
+          <span class="chip chip-green">ShippingController</span>
+        </div>
+      </div>
+
+      <div class="layer">
+        <div class="layer-label">Service Interfaces + Impl</div>
+        <div class="chips">
+          <span class="chip">AuthService</span>
+          <span class="chip">CatalogService</span>
+          <span class="chip">CartService</span>
+          <span class="chip">OrderService</span>
+          <span class="chip">PaymentService</span>
+          <span class="chip">WishlistService</span>
+          <span class="chip">ReviewService</span>
+          <span class="chip">CouponService</span>
+        </div>
+      </div>
+
+      <div class="layer">
+        <div class="layer-label">JPA Repositories + Entities</div>
+        <div class="chips">
+          <span class="chip chip-amber">Member</span>
+          <span class="chip chip-amber">Book / Writer / Category</span>
+          <span class="chip chip-amber">Cart / CartItem</span>
+          <span class="chip chip-amber">Order / OrderItem</span>
+          <span class="chip chip-amber">Payment / Shipment</span>
+          <span class="chip chip-amber">Review / Coupon / Address</span>
+        </div>
+      </div>
+
+      <div class="layer">
+        <div class="layer-label">Extras</div>
+        <div class="chips">
+          <span class="chip chip-purple">MapStruct (EStoreMapper)</span>
+          <span class="chip chip-purple">DataInitializer (seed data)</span>
+          <span class="chip chip-rose">GlobalExceptionHandler</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 2. User Journey Flows ── -->
+  <div class="section-title">2 · User Journey Flows — Frontend ↔ Backend</div>
+  <div class="flows">
+
+    <!-- FLOW: App Start -->
+    <div class="flow-row">
+      <div class="flow-label">
+        <div>
+          <div class="flow-label-inner">App Start</div>
+          <div class="flow-label-sub">Page load</div>
+        </div>
+      </div>
+      <div class="flow-fe">
+        <div class="flow-side-label">Frontend</div>
+        <div class="flow-item">StoreContext initialises — reads <code>bw_user</code> &amp; <code>bw_cart_id</code> from localStorage</div>
+        <div class="flow-item">Generates a UUID cart ID if none stored (persists across sessions)</div>
+        <div class="flow-item">HomeView mounts → triggers catalog + recommendations load</div>
+      </div>
+      <div class="flow-be">
+        <div class="flow-side-label">Backend</div>
+        <div class="flow-item"><code class="get">GET</code> /catalog/categories</div>
+        <div class="flow-item"><code class="get">GET</code> /catalog/shelves/bestsellers</div>
+        <div class="flow-item"><code class="get">GET</code> /catalog/shelves/new-launches</div>
+        <div class="flow-item"><code class="get">GET</code> /recommendations/personalized</div>
+        <div class="flow-item"><code class="get">GET</code> /cart/{cartId}</div>
+      </div>
+    </div>
+
+    <!-- FLOW: Auth -->
+    <div class="flow-row">
+      <div class="flow-label">
+        <div>
+          <div class="flow-label-inner">Authentication</div>
+          <div class="flow-label-sub">Login / Register</div>
+        </div>
+      </div>
+      <div class="flow-fe">
+        <div class="flow-side-label">Frontend</div>
+        <div class="flow-item">LoginModal component opens (triggered by nav or protected action)</div>
+        <div class="flow-item">On success → user object saved to <code>bw_user</code> localStorage + StoreContext</div>
+        <div class="flow-item">Wishlist auto-loads for the newly logged-in member</div>
+      </div>
+      <div class="flow-be">
+        <div class="flow-side-label">Backend — AuthController</div>
+        <div class="flow-item"><code class="post">POST</code> /auth/login → returns <code>AuthResponse</code> (memberId, name, email, giftPoints)</div>
+        <div class="flow-item"><code class="post">POST</code> /auth/register → <code>201 Created</code></div>
+        <div class="flow-item"><code class="get">GET</code> /members/{memberId}/wishlist → reload wishlist books</div>
+      </div>
+    </div>
+
+    <!-- FLOW: Browse / Search -->
+    <div class="flow-row">
+      <div class="flow-label">
+        <div>
+          <div class="flow-label-inner">Browse &amp; Search</div>
+          <div class="flow-label-sub">HomeView</div>
+        </div>
+      </div>
+      <div class="flow-fe">
+        <div class="flow-side-label">Frontend</div>
+        <div class="flow-item">Search bar, Language / Format / Price dropdowns update <code>searchFilter</code> state</div>
+        <div class="flow-item">useEffect debounces → triggers API call when any filter is active</div>
+        <div class="flow-item">Left sidebar categories set <code>searchFilter.category</code></div>
+        <div class="flow-item">BookCard grid renders results / shelves depending on active filter</div>
+      </div>
+      <div class="flow-be">
+        <div class="flow-side-label">Backend — CatalogController</div>
+        <div class="flow-item"><code class="get">GET</code> /search?q=&amp;category=&amp;language=&amp;format=&amp;minPrice=&amp;maxPrice=&amp;sortBy= → paginated <code>BookDto[]</code></div>
+        <div class="flow-item">CatalogServiceImpl uses JPA Specification for dynamic multi-attr filtering</div>
+        <div class="flow-item">Supports sort: RELEVANCE · PRICE_LOW_HIGH · PRICE_HIGH_LOW · NEWEST</div>
+      </div>
+    </div>
+
+    <!-- FLOW: Book Detail -->
+    <div class="flow-row">
+      <div class="flow-label">
+        <div>
+          <div class="flow-label-inner">Book Details</div>
+          <div class="flow-label-sub">BookDetailView</div>
+        </div>
+      </div>
+      <div class="flow-fe">
+        <div class="flow-side-label">Frontend</div>
+        <div class="flow-item">viewBookDetails(bookId) sets selectedBookId + switches view</div>
+        <div class="flow-item">Parallel load: book info · related books · reviews</div>
+        <div class="flow-item">Wishlist heart button calls toggleWishlist → requires login</div>
+        <div class="flow-item">Add to Cart button calls addToCart(bookId, 1)</div>
+        <div class="flow-item">Star rating form + textarea → submit review</div>
+      </div>
+      <div class="flow-be">
+        <div class="flow-side-label">Backend</div>
+        <div class="flow-item"><code class="get">GET</code> /catalog/books/{bookId} → <code>BookDto</code></div>
+        <div class="flow-item"><code class="get">GET</code> /recommendations/related/{bookId} → <code>BookDto[]</code></div>
+        <div class="flow-item"><code class="get">GET</code> /reviews/book/{bookId} → <code>ReviewDto[]</code></div>
+        <div class="flow-item"><code class="post">POST</code> /cart/{cartId}/items → <code>CartDto</code></div>
+        <div class="flow-item"><code class="post">POST</code> /reviews → <code>ReviewDto</code></div>
+        <div class="flow-item"><code class="post">POST</code> /members/{memberId}/wishlist</div>
+        <div class="flow-item"><code class="del">DELETE</code> /members/{memberId}/wishlist/{bookId}</div>
+      </div>
+    </div>
+
+    <!-- FLOW: Cart -->
+    <div class="flow-row">
+      <div class="flow-label">
+        <div>
+          <div class="flow-label-inner">Cart</div>
+          <div class="flow-label-sub">CartCheckoutView</div>
+        </div>
+      </div>
+      <div class="flow-fe">
+        <div class="flow-side-label">Frontend</div>
+        <div class="flow-item">Cart items list with +/− qty buttons and trash remove</div>
+        <div class="flow-item">Coupon code input → apply discount; display savings message</div>
+        <div class="flow-item">Redeem Gift Points toggle → deducts up to 50% of subtotal</div>
+        <div class="flow-item">Price summary: subtotal + 5% tax − coupon − points = final</div>
+        <div class="flow-item">Proceed to Payment button — requires logged-in user</div>
+      </div>
+      <div class="flow-be">
+        <div class="flow-side-label">Backend — CartController + CouponController</div>
+        <div class="flow-item"><code class="get">GET</code> /cart/{cartId} → <code>CartDto</code> (items, subtotal, itemCount)</div>
+        <div class="flow-item"><code class="put">PUT</code> /cart/{cartId}/items/{itemId}?quantity=N → updated <code>CartDto</code></div>
+        <div class="flow-item"><code class="del">DELETE</code> /cart/{cartId}/items/{itemId} → updated <code>CartDto</code></div>
+        <div class="flow-item"><code class="post">POST</code> /coupons/calculate {code, orderAmount} → {discount, finalAmount}</div>
+        <div class="flow-item"><code class="get">GET</code> /members/{memberId}/addresses → <code>AddressDto[]</code></div>
+      </div>
+    </div>
+
+    <!-- FLOW: Checkout -->
+    <div class="flow-row">
+      <div class="flow-label">
+        <div>
+          <div class="flow-label-inner">Checkout &amp; Payment</div>
+          <div class="flow-label-sub">CartCheckoutView</div>
+        </div>
+      </div>
+      <div class="flow-fe">
+        <div class="flow-side-label">Frontend (multi-step)</div>
+        <div class="flow-item">Step 1 — Select or create delivery address</div>
+        <div class="flow-item">Step 2 — Create Order → receive orderId</div>
+        <div class="flow-item">Step 3 — Payment modal: choose method (Credit Card / UPI / Wallet / COD)</div>
+        <div class="flow-item">Step 4 — Process payment → success confirmation screen</div>
+        <div class="flow-item">On success: cart cleared, navigate to Orders view</div>
+      </div>
+      <div class="flow-be">
+        <div class="flow-side-label">Backend — OrderController + PaymentController</div>
+        <div class="flow-item"><code class="post">POST</code> /members/{memberId}/addresses → <code>AddressDto</code> (if new)</div>
+        <div class="flow-item"><code class="post">POST</code> /orders {cartId, memberId, addressId, couponCode, redeemGiftPoints} → <code>OrderDto</code></div>
+        <div class="flow-item"><code class="post">POST</code> /payments/process {orderId, paymentMethod, amount} → <code>PaymentResponse</code></div>
+        <div class="flow-item">OrderServiceImpl converts cart items → order items; updates stock</div>
+        <div class="flow-item">PaymentServiceImpl records payment; awards gift points on success</div>
+      </div>
+    </div>
+
+    <!-- FLOW: Orders -->
+    <div class="flow-row">
+      <div class="flow-label">
+        <div>
+          <div class="flow-label-inner">Order History</div>
+          <div class="flow-label-sub">OrdersView</div>
+        </div>
+      </div>
+      <div class="flow-fe">
+        <div class="flow-side-label">Frontend</div>
+        <div class="flow-item">Loads all orders for logged-in member on mount</div>
+        <div class="flow-item">Cancel Order button — 48-hour SLA window (confirm dialog)</div>
+        <div class="flow-item">Buy In Again button — re-adds past items to current cart → redirects to Cart</div>
+      </div>
+      <div class="flow-be">
+        <div class="flow-side-label">Backend — OrderController</div>
+        <div class="flow-item"><code class="get">GET</code> /orders/member/{memberId} → <code>OrderDto[]</code> with nested items &amp; books</div>
+        <div class="flow-item"><code class="post">POST</code> /orders/{orderId}/cancel → <code>OrderDto</code> (status: CANCELLED; refund gift points)</div>
+        <div class="flow-item"><code class="post">POST</code> /orders/{orderId}/buy-again {targetCartId} → updated <code>CartDto</code></div>
+      </div>
+    </div>
+
+    <!-- FLOW: Wishlist -->
+    <div class="flow-row">
+      <div class="flow-label">
+        <div>
+          <div class="flow-label-inner">Wishlist</div>
+          <div class="flow-label-sub">WishlistView</div>
+        </div>
+      </div>
+      <div class="flow-fe">
+        <div class="flow-side-label">Frontend</div>
+        <div class="flow-item">Loaded on login via StoreContext.refreshWishlist()</div>
+        <div class="flow-item">Heart icon on BookCard / BookDetail toggles membership in wishlist</div>
+        <div class="flow-item">WishlistView shows full saved books grid</div>
+      </div>
+      <div class="flow-be">
+        <div class="flow-side-label">Backend — WishlistController</div>
+        <div class="flow-item"><code class="get">GET</code> /members/{memberId}/wishlist → <code>BookDto[]</code></div>
+        <div class="flow-item"><code class="post">POST</code> /members/{memberId}/wishlist {bookId}</div>
+        <div class="flow-item"><code class="del">DELETE</code> /members/{memberId}/wishlist/{bookId}</div>
+      </div>
+    </div>
+
+    <!-- FLOW: Writers -->
+    <div class="flow-row">
+      <div class="flow-label">
+        <div>
+          <div class="flow-label-inner">Writers</div>
+          <div class="flow-label-sub">WritersView</div>
+        </div>
+      </div>
+      <div class="flow-fe">
+        <div class="flow-side-label">Frontend</div>
+        <div class="flow-item">Shows writer subscription list for logged-in member</div>
+      </div>
+      <div class="flow-be">
+        <div class="flow-side-label">Backend — AuthController</div>
+        <div class="flow-item"><code class="get">GET</code> /members/{memberId}/writers → <code>WriterDto[]</code></div>
+      </div>
+    </div>
+
+  </div><!-- /flows -->
+
+  <!-- ── 3. Order Status Lifecycle ── -->
+  <div class="section-title">3 · Order Status Lifecycle</div>
+  <div class="lifecycle" style="margin-bottom:8px;">
+    <div class="lc-step"><div class="lc-box lc-placed">PLACED</div></div>
+    <div class="lc-arrow">→</div>
+    <div class="lc-step"><div class="lc-box lc-payment">PAYMENT_PENDING</div></div>
+    <div class="lc-arrow">→</div>
+    <div class="lc-step"><div class="lc-box lc-confirmed">CONFIRMED</div></div>
+    <div class="lc-arrow">→</div>
+    <div class="lc-step"><div class="lc-box lc-shipped">SHIPPED</div></div>
+    <div class="lc-arrow">→</div>
+    <div class="lc-step"><div class="lc-box lc-delivered">DELIVERED</div></div>
+    <div class="lc-arrow" style="color:#ef4444;">↙</div>
+    <div class="lc-step"><div class="lc-box lc-cancelled">CANCELLED</div></div>
+  </div>
+  <p class="lc-note">⟳ Cancel only available within 48-hour window of CONFIRMED status · Gift points refunded on cancellation · "Buy In Again" available from any status</p>
+
+  <!-- ── 4. Complete API Surface ── -->
+  <div class="section-title" style="margin-top:28px;">4 · Complete REST API Surface (/api/v1)</div>
+  <table class="api-table">
+    <thead>
+      <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+      <tr class="group-row"><td colspan="3">Auth &amp; Member</td></tr>
+      <tr><td><span class="method m-post">POST</span></td><td class="endpoint">/auth/login</td><td>Authenticate user → AuthResponse</td></tr>
+      <tr><td><span class="method m-post">POST</span></td><td class="endpoint">/auth/register</td><td>Register new member → AuthResponse</td></tr>
+      <tr><td><span class="method m-get">GET</span></td><td class="endpoint">/members/{id}/profile</td><td>Member profile (name, email, points)</td></tr>
+      <tr><td><span class="method m-get">GET</span></td><td class="endpoint">/members/{id}/addresses</td><td>Saved delivery addresses</td></tr>
+      <tr><td><span class="method m-post">POST</span></td><td class="endpoint">/members/{id}/addresses</td><td>Add new delivery address</td></tr>
+      <tr><td><span class="method m-get">GET</span></td><td class="endpoint">/members/{id}/writers</td><td>Subscribed writer list</td></tr>
+
+      <tr class="group-row"><td colspan="3">Catalog &amp; Discovery</td></tr>
+      <tr><td><span class="method m-get">GET</span></td><td class="endpoint">/catalog/categories</td><td>All book categories</td></tr>
+      <tr><td><span class="method m-get">GET</span></td><td class="endpoint">/catalog/books/{bookId}</td><td>Book details by ID</td></tr>
+      <tr><td><span class="method m-get">GET</span></td><td class="endpoint">/catalog/shelves/bestsellers</td><td>Bestsellers this month</td></tr>
+      <tr><td><span class="method m-get">GET</span></td><td class="endpoint">/catalog/shelves/new-launches</td><td>New book launches</td></tr>
+      <tr><td><span class="method m-get">GET</span></td><td class="endpoint">/search</td><td>Multi-attr search (q, category, language, format, price, sort)</td></tr>
+      <tr><td><span class="method m-get">GET</span></td><td class="endpoint">/recommendations/personalized</td><td>Personalized picks (based on order history)</td></tr>
+      <tr><td><span class="method m-get">GET</span></td><td class="endpoint">/recommendations/related/{bookId}</td><td>Related books for a given book</td></tr>
+
+      <tr class="group-row"><td colspan="3">Wishlist</td></tr>
+      <tr><td><span class="method m-get">GET</span></td><td class="endpoint">/members/{id}/wishlist</td><td>Wishlist book list</td></tr>
+      <tr><td><span class="method m-post">POST</span></td><td class="endpoint">/members/{id}/wishlist</td><td>Add book to wishlist</td></tr>
+      <tr><td><span class="method m-delete">DELETE</span></td><td class="endpoint">/members/{id}/wishlist/{bookId}</td><td>Remove book from wishlist</td></tr>
+
+      <tr class="group-row"><td colspan="3">Cart</td></tr>
+      <tr><td><span class="method m-get">GET</span></td><td class="endpoint">/cart/{cartId}</td><td>Get cart contents &amp; totals</td></tr>
+      <tr><td><span class="method m-post">POST</span></td><td class="endpoint">/cart/{cartId}/items</td><td>Add item to cart</td></tr>
+      <tr><td><span class="method m-put">PUT</span></td><td class="endpoint">/cart/{cartId}/items/{itemId}</td><td>Update item quantity</td></tr>
+      <tr><td><span class="method m-delete">DELETE</span></td><td class="endpoint">/cart/{cartId}/items/{itemId}</td><td>Remove item from cart</td></tr>
+      <tr><td><span class="method m-delete">DELETE</span></td><td class="endpoint">/cart/{cartId}</td><td>Clear entire cart</td></tr>
+
+      <tr class="group-row"><td colspan="3">Orders</td></tr>
+      <tr><td><span class="method m-post">POST</span></td><td class="endpoint">/orders</td><td>Create order from cart (cartId, memberId, addressId, coupon, points)</td></tr>
+      <tr><td><span class="method m-get">GET</span></td><td class="endpoint">/orders/member/{memberId}</td><td>Order history for member</td></tr>
+      <tr><td><span class="method m-get">GET</span></td><td class="endpoint">/orders/{orderId}</td><td>Order detail by ID</td></tr>
+      <tr><td><span class="method m-post">POST</span></td><td class="endpoint">/orders/{orderId}/cancel</td><td>Cancel within 48-hour SLA</td></tr>
+      <tr><td><span class="method m-post">POST</span></td><td class="endpoint">/orders/{orderId}/buy-again</td><td>Re-add past order items to cart</td></tr>
+
+      <tr class="group-row"><td colspan="3">Payment &amp; Coupons</td></tr>
+      <tr><td><span class="method m-post">POST</span></td><td class="endpoint">/payments/process</td><td>Process payment; award gift points</td></tr>
+      <tr><td><span class="method m-get">GET</span></td><td class="endpoint">/coupons/{code}</td><td>Get coupon details by code</td></tr>
+      <tr><td><span class="method m-post">POST</span></td><td class="endpoint">/coupons/calculate</td><td>Compute discount for order amount</td></tr>
+
+      <tr class="group-row"><td colspan="3">Reviews &amp; Shipping</td></tr>
+      <tr><td><span class="method m-get">GET</span></td><td class="endpoint">/reviews/book/{bookId}</td><td>All reviews for a book</td></tr>
+      <tr><td><span class="method m-post">POST</span></td><td class="endpoint">/reviews</td><td>Submit a new review (memberId, rating, comment)</td></tr>
+      <tr><td><span class="method m-get">GET</span></td><td class="endpoint">/shipping/estimate/{bookId}</td><td>Delivery estimate for a book</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ── 5. Key Features ── -->
+  <div class="section-title">5 · Key Feature Highlights</div>
+  <div class="features">
+    <div class="feature-card">
+      <h4>🛒 Cart Persistence</h4>
+      <div class="feature-item">UUID cart ID stored in localStorage — survives page refresh &amp; logout</div>
+      <div class="feature-item">Cart created lazily on backend on first item add</div>
+      <div class="feature-item">Shared cart ID across guest and logged-in sessions</div>
+    </div>
+    <div class="feature-card">
+      <h4>💰 Loyalty: Gift Points</h4>
+      <div class="feature-item">Points awarded by PaymentService on successful payment</div>
+      <div class="feature-item">Redeem up to 50% of order subtotal at checkout</div>
+      <div class="feature-item">Points refunded on 48h cancellation</div>
+    </div>
+    <div class="feature-card">
+      <h4>🔖 Coupon Engine</h4>
+      <div class="feature-item">POST /coupons/calculate returns exact discount amount</div>
+      <div class="feature-item">Stacks with gift point redemption in price summary</div>
+      <div class="feature-item">Invalid/expired coupon returns 4xx with message</div>
+    </div>
+    <div class="feature-card">
+      <h4>🔍 Multi-Attr Search</h4>
+      <div class="feature-item">Simultaneous filters: text · category · language · format · price range</div>
+      <div class="feature-item">4 sort modes: Relevance / Price↑ / Price↓ / Newest</div>
+      <div class="feature-item">JPA Specification for dynamic query building</div>
+    </div>
+    <div class="feature-card">
+      <h4>📦 Order Lifecycle</h4>
+      <div class="feature-item">48-hour cancellation SLA enforced server-side</div>
+      <div class="feature-item">"Buy In Again" re-orders any past order into active cart</div>
+      <div class="feature-item">Full order history with item-level book details</div>
+    </div>
+    <div class="feature-card">
+      <h4>⭐ Reviews &amp; Discovery</h4>
+      <div class="feature-item">Star rating (1–5) + comment; logged-in only</div>
+      <div class="feature-item">Personalized recommendations derived from order history</div>
+      <div class="feature-item">Related books panel on every Book Detail page</div>
+    </div>
+  </div>
+
+  <!-- ── Footer ── -->
+  <div class="footer">
+    Made with IBM Bob
+  </div>
+
+</div>
+</body>
+</html>
